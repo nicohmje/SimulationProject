@@ -4,24 +4,27 @@ from vecteur3D import *
 
 
 """
-    Masse + (ressort+amortisseur)
-
-    avec application au clavier d'une force constante ou harmonique.
+    Pendules multiples
 """
 
 def resetToPos(pos:Vecteur3D, particule:Particule):
+    """
+        Remets les pendules en place.
+    """
 
     particule.position.append(pos)
     particule.acceleration.append(Vecteur3D())
     particule.speed.append(Vecteur3D())
 
 def pendulum_coordinates(L, theta):
-    # Convert theta from degrees to radians
+    """
+        Distance + angle -> coordonees
+    """
+
     origin = P_fixe.getPosition()
 
     theta_radians = math.radians(theta)
     
-    # Calculate the coordinates of the pendulum bob
     x = origin.x + L * math.sin(theta_radians)
     y = origin.y + L * math.cos(theta_radians)
     
@@ -29,7 +32,9 @@ def pendulum_coordinates(L, theta):
 
 def customEvents(univers:Univers):
     if f_down.active:
-        univers.pos.append(pends[0].getPosition().x)
+        univers.pos1.append(pends[0].getPosition().x)
+        univers.pos2.append(pends[1].getPosition().x)
+        univers.pos3.append(pends[2].getPosition().x)
     if univers.gameKeys[ord('f')]:
         if not f_down.active:
             univers.start = len(univers.time)
@@ -118,7 +123,9 @@ if __name__ == "__main__":
 
 
     sim_env.addAgent(P_fixe,*pends)
-    sim_env.pos = [pends[0].getPosition().x]
+    sim_env.pos1 = [pends[0].getPosition().x]
+    sim_env.pos2 = [pends[1].getPosition().x]
+    sim_env.pos3 = [pends[2].getPosition().x]
     sim_env.index = 0
 
 
@@ -145,22 +152,50 @@ if __name__ == "__main__":
     #
     # Post-traitement
     #
-    sim_env.plot()
 
     from pylab import figure,plot,show,legend,xlabel,ylabel,title
 
     if choice == "1":
-        sim_env.pos = sim_env.pos - np.mean(sim_env.pos)
-        t = np.array(sim_env.time[sim_env.start:])
+        try:
+            sim_env.pos1 = sim_env.pos1 - np.mean(sim_env.pos1)
+            t = np.array(sim_env.time[sim_env.start:])
 
-        zero_crossings = np.where(np.diff(np.signbit(sim_env.pos)))[0]
-        average_period = 2*np.mean(np.diff(t[zero_crossings]))
-        figure("Pendule")
-        title(f"Pendule de {pendulums[0]*0.1} cm, periode: {average_period:.3f}s")
-        plot(t,sim_env.pos)
-        xlabel("Time (s)")
-        ylabel("Position x (cm)")
-        legend()
-        show()
+            zero_crossings = np.where(np.diff(np.signbit(sim_env.pos1)))[0]
+            average_period = 2*np.mean(np.diff(t[zero_crossings]))
+            figure("Pendule")
+            title(f"Pendule de {pendulums[0]*0.1} cm, periode: {average_period:.3f}s")
+            plot(t,sim_env.pos1)
+            xlabel("Time (s)")
+            ylabel("Position x (cm)")
+            show()
+
+            sim_env.pos2 = sim_env.pos2 - np.mean(sim_env.pos2)
+            t = np.array(sim_env.time[sim_env.start:])
+
+            zero_crossings = np.where(np.diff(np.signbit(sim_env.pos2)))[0]
+            average_period = 2*np.mean(np.diff(t[zero_crossings]))
+            figure("Pendule")
+            title(f"Pendule de {pendulums[1]*0.1} cm, periode: {average_period:.3f}s")
+            plot(t,sim_env.pos2)
+            xlabel("Time (s)")
+            ylabel("Position x (cm)")
+
+            show()
+
+            sim_env.pos3 = sim_env.pos3 - np.mean(sim_env.pos3)
+            t = np.array(sim_env.time[sim_env.start:])
+
+            zero_crossings = np.where(np.diff(np.signbit(sim_env.pos3)))[0]
+            average_period = 2*np.mean(np.diff(t[zero_crossings]))
+            figure("Pendule")
+            title(f"Pendule de {pendulums[2]*0.1} cm, periode: {average_period:.3f}s")
+            plot(t,sim_env.pos3)
+            xlabel("Time (s)")
+            ylabel("Position x (cm)")
+            show()
+        except:
+            print("No oscillations have been observed. Did you start the simulation (F)? Perhaps you reset it (G)?")
+            pass
+    
     
     

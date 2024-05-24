@@ -232,7 +232,7 @@ def test_simulation():
     temps = [t]
     speeds = [0]
 
-    while t<2: 
+    while t<1: 
         t+= step
         temps.append(t)
         TestMotor.setVoltage(100)
@@ -241,7 +241,7 @@ def test_simulation():
         
         
     
-    plt.figure()
+    plt.figure("Step Response")
     plt.title("Step response comparaison of numerical and analytical solutions")
     plt.plot(temps, TestMotor.speed_rad_s, label=f"RK4 solution (L={TestMotor.inductance_H}H)")
     plt.plot(temps, speeds, label="Analytical solution (L=0H)")
@@ -251,7 +251,7 @@ def test_simulation():
 
 def test_speedcontrol(target_speed):
     TestMotor = MoteurCC(max_voltage=0)
-    pid_speedcontrol = PIDController(P=80.0, I=3000, D=0.5, max_windup=50, motor=TestMotor, noise_stddev = 0.0)
+    pid_speedcontrol = PIDController(P=80.0, I=3000, D=0.5, max_windup=50, motor=TestMotor, noise_stddev = 0.02)
 
     t = 0
     step = 0.001
@@ -260,54 +260,60 @@ def test_speedcontrol(target_speed):
     rise_time = None
     
 
-    while t<3: 
+    while t<0.15: 
         t+= step
         temps.append(t)
         pid_speedcontrol.simule(step, target_speed, TestMotor.getSpeed())   
 
-        if t>2:
-            TestMotor.setExternTorque(40)
+        # if t>0.5:
+        #     TestMotor.setExternTorque(40)
 
         if rise_time is None and (TestMotor.getSpeed() > 0.95 * target_speed):
             rise_time = temps[-1]
 
+    print("max speed speed control: ", max(TestMotor.speed_rad_s), " rad/s")
+
     if rise_time is None:
         rise_time = float('inf')
     plt.figure("PID Speed Control")
+    plt.ylim(-10,30)
     plt.title(f"PID Speed Control, target={target_speed}, static error={(TestMotor.getSpeed()-target_speed):.2f}, rise time = {rise_time:.2f}s")
+    plt.plot(temps, [i * 0.1 for i in TestMotor.voltage_V], label="Voltage (0.1V)", color="green")
     plt.plot(temps, TestMotor.speed_rad_s, label="Speed (rad/s)")
     plt.plot(temps, TestMotor.torque_Nm, label="Torque (Nm)")
-    plt.plot(temps, [i * 0.1 for i in TestMotor.voltage_V], label="Voltage (0.1V)")
     plt.legend()
     plt.show()
 
 def test_poscontrol(target_pos):
 
     TestMotor = MoteurCC(max_voltage=5000)
-    pid_speedcontrol = PIDController(P=160.0, I=100, D=10, max_windup=500, motor=TestMotor)
+    pid_speedcontrol = PIDController(P=80.0, I=1, D=5, max_windup=2, motor=TestMotor, noise_stddev=0.02)
 
     t = 0
     step = 0.001
     temps = [t]
     rise_time = None
 
-    while t<10: 
+    while t<1.5: 
         t+= step
         temps.append(t)
         pid_speedcontrol.simule(step, target_pos, TestMotor.getPosition())
         if rise_time is None and (TestMotor.getPosition() > 0.95 * target_pos):
             rise_time = temps[-1]
-        if t>2:
-            TestMotor.setExternTorque(5)
+        # if t>2:
+        #     TestMotor.setExternTorque(5)
 
     if rise_time is None:
         rise_time = float('inf')
+
+    print("max speed pos control: ", max(TestMotor.speed_rad_s), " rad/s")
     
-    plt.figure()
+    plt.figure("PID Pos Control")
     plt.title(f"PID Pos Control, target={target_pos}, final error={(TestMotor.getPosition()-target_pos):.2f}, rise time = {rise_time:.2f}s")
+    plt.ylim(-50,50)
+    plt.plot(temps, [i * 0.1 for i in TestMotor.voltage_V], label="Voltage (0.1V)", color="green")
     plt.plot(temps, TestMotor.position_rad, label="Position (rad)")
     plt.plot(temps, TestMotor.torque_Nm, label="Torque (Nm)")
-    plt.plot(temps, [i * 0.1 for i in TestMotor.voltage_V], label="Voltage (0.1V)")
     plt.legend()
     plt.show()
 
@@ -319,8 +325,8 @@ if __name__ == "__main__":
         print("The Motor class failed its unit tests")
 
     test_poscontrol(10)
-    # test_simulation()
-    # test_speedcontrol(4)
+    test_simulation()
+    test_speedcontrol(4)
 
 
 

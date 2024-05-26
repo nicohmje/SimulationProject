@@ -143,8 +143,6 @@ class MoteurCC:
         self.stepsize_s = step
         
         new_curr, new_speed = self.rk4(self.current_A[-1], self.speed_rad_s[-1])
-        # print(new_curr, new_speed)
-        # time.sleep(1)
 
         self.current_A.append(new_curr)
         self.speed_rad_s.append(new_speed)
@@ -326,6 +324,51 @@ def test_poscontrol(target_pos):
     plt.legend()
     plt.show()
 
+def test():
+
+    m_r= 0.095 
+    L_r = 0.085 
+
+    Jr = (m_r * L_r**2) / 12 #inertie du rotor
+
+    c_r = 5e-4 #friction visqueuse f
+
+
+    m_p = 0.024 #Pendulum mass and length
+    L_p = 0.129 
+
+    c_p = 5e-5
+
+    R_m = 8.4 
+    K_m = 0.042 #back emf constant
+    K_t = 0.042 #torque constant
+
+    # TestMotor = MoteurCC(res=R_m, kc = K_t, ke=K_m, rotorJ=Jr, f=c_r)
+    TestMotor = MoteurCC(kc = K_t, ke=K_m, rotorJ=Jr, f=c_r)
+
+
+    t = 0
+    step = 0.001
+    temps = [t]
+    
+    while t<2:
+        t+= step
+        temps.append(t)
+        TestMotor.setVoltage(0)
+        TestMotor.setExternTorque(math.sin(t * math.pi) * 5)
+        TestMotor.simule(step)
+    
+    plt.figure("Open Loop Speed Control")
+    plt.ylim(-5,5)
+    plt.plot(temps, [i * 0.1 for i in TestMotor.voltage_V], label="Voltage (0.1V)", color="green")
+    plt.plot(temps, TestMotor.position_rad, label="Position (rad)")
+    plt.plot(temps, TestMotor.torque_Nm, label="Torque (Nm)")
+    plt.xlabel("Time (s)")
+    plt.legend()
+    plt.show()
+        
+
+
 
 def open_loop_speedcontrol(target_speed):
 
@@ -369,8 +412,9 @@ if __name__ == "__main__":
 
     # test_poscontrol(10)
     # test_simulation()
-    test_speedcontrol(4)
-    open_loop_speedcontrol(4)
+    # test_speedcontrol(4)
+    # open_loop_speedcontrol(4)
+    test()
 
 
 

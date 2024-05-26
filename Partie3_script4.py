@@ -9,25 +9,13 @@ from vecteur3D import *
     avec application au clavier d'une force constante ou harmonique.
 """
 
-def compute_fft(time_series, sampling_rate):
-    """
-    Computes the FFT of a given time series and sampling rate, returns frequencies and magnitudes in dB,
-    and excludes the zero frequency component.
-    
-    Args:
-    - time_series (np.array): The data points of the time series.
-    - sampling_rate (float): The sampling rate of the data (number of samples per second).
-    
-    Returns:
-    - frequencies (np.array): Array of frequencies corresponding to the FFT output.
-    - magnitudes_dB (np.array): Magnitude of the FFT at each frequency in decibels.
-    """
+def compute_fft(time_series, step):
     n = len(time_series)
     fft_result = np.fft.fft(time_series)
-    frequencies = np.fft.fftfreq(n, d=1/sampling_rate)
+    frequencies = np.fft.fftfreq(n, d=step)
     magnitudes = np.abs(fft_result)
 
-    magnitudes = 20 * np.log10(magnitudes)
+    magnitudes = 20 * np.log10(magnitudes) #dB 
     
     # Exclude zero frequency (first element) for both frequencies and magnitudes
     return frequencies[1:n//2], magnitudes[1:n//2]  # Return only the positive half of the spectrum, excluding zero
@@ -120,8 +108,6 @@ def customEvents(univers:Univers):
                         pends[2].applyForce(Vecteur3D(1.618*force,0,0))
                         pends[3].applyForce(Vecteur3D(-force,0,0))
 
-    pass
-
 
 if __name__ == "__main__":
     sim_env = Univers(name='Part 3 Script 4',step=0.001)
@@ -153,17 +139,17 @@ if __name__ == "__main__":
         print(" 0. Chaos ")
         match choice:
             case "1":
-                print(" 1. Les deux masses | - +")
-                print(" 2. Les deux masses | + +")
+                print(" 1. Opposition de phase | - +")
+                print(" 2. En phase | + +")
             case "2":
                 print(" 1. Les trois masses, meme signe | + ++ + ")
                 print(" 2. Deux masses exterieures, signe oppose | + x - ")
-                print(" 3. Les trois masses, milieu oppose | + - + ")
+                print(" 3. Les trois masses, milieu oppose | + -- + ")
             case "3":
                 print(" 1. Paire gauche, paire droite | + ++ ++ + ")
                 print(" 2. Paire gauche, paire droite, signes opposes | -- - + ++ ")
-                print(" 3. Paire exterieure, paire interieure | + - - + ")
-                print(" 4. Paires ABAB | + - + - ")
+                print(" 3. Paire exterieure, paire interieure | ++ - - ++ ")
+                print(" 4. Paires ABAB | + -- ++ - ")
         
         choice2 = input("Choice ? : \n ")
 
@@ -271,7 +257,7 @@ if __name__ == "__main__":
     if choice == "1":
         sim_env.pos1 = sim_env.pos1 - np.mean(sim_env.pos1)
 
-        frequencies, magnitudes_dB = compute_fft(sim_env.pos1, 1/sim_env.step)
+        frequencies, magnitudes_dB = compute_fft(sim_env.pos1, sim_env.step)
 
         f_theo1 = (1. / (2 * math.pi)) * math.sqrt(k/P_1.mass)
         f_theo2 = f_theo1 * math.sqrt(3)
@@ -328,11 +314,12 @@ if __name__ == "__main__":
         legend()
         show()    
     elif choice == "2":
+
         t = np.array(sim_env.time)
 
         sim_env.pos1 = sim_env.pos1 - np.mean(sim_env.pos1)
 
-        frequencies, magnitudes_dB = compute_fft(sim_env.pos1, 1/sim_env.step)
+        frequencies, magnitudes_dB = compute_fft(sim_env.pos1, sim_env.step)
 
         w =  math.sqrt(k/P_1.mass)
         f_theo1 = 1/(math.pi * 2) * math.sqrt(w**2 * (2 - math.sqrt(2)))
@@ -396,12 +383,14 @@ if __name__ == "__main__":
         legend()
         show()
         pass
+
     elif choice == "3":
+
         t = np.array(sim_env.time)
 
         sim_env.pos1 = sim_env.pos1 - np.mean(sim_env.pos1)
 
-        frequencies, magnitudes_dB = compute_fft(sim_env.pos1, 1/sim_env.step)
+        frequencies, magnitudes_dB = compute_fft(sim_env.pos1, sim_env.step)
 
         f =  1/(math.pi*2) * math.sqrt(k/P_1.mass)
         f_theo1 = 0.618 * f
@@ -410,7 +399,7 @@ if __name__ == "__main__":
         f_theo4 = 1.902 * f
 
 
-        print(f"Frequences theoriques: f1={f_theo1:.3f}, f2={f_theo2:.3f},  f3={f_theo3:.3f}")
+        print(f"Frequences theoriques: f1={f_theo1:.3f}, f2={f_theo2:.3f},  f3={f_theo3:.3f}, f4={f_theo4:.3f}")
 
         figure("FFT")
         stem(frequencies, magnitudes_dB, 'b', markerfmt=" ", basefmt="-b")

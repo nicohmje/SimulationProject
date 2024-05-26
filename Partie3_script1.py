@@ -16,35 +16,11 @@ def customEvents(univers:Univers):
         if univers.choice == "1":
             P_mass.applyForce(Vecteur3D(500,0,0))
         else:   
-            P_mass.applyForce(Vecteur3D(250 *math.cos(univers.time[-1]* (math.pi/2.))))
+            P_mass.applyForce(Vecteur3D(500 *math.cos(univers.time[-1]* (math.pi/2.))))
             univers.force_active = True
     elif univers.force_active and univers.choice == "2":
-            P_mass.applyForce(Vecteur3D(250 *math.cos(univers.time[-1]* (math.pi/2.))))
+            P_mass.applyForce(Vecteur3D(500 *math.cos(univers.time[-1]* (math.pi/2.))))
     
-
-def compute_fft(time_series, sampling_rate):
-    """
-    Computes the FFT of a given time series and sampling rate, returns frequencies and magnitudes in dB,
-    and excludes the zero frequency component.
-    
-    Args:
-    - time_series (np.array): The data points of the time series.
-    - sampling_rate (float): The sampling rate of the data (number of samples per second).
-    
-    Returns:
-    - frequencies (np.array): Array of frequencies corresponding to the FFT output.
-    - magnitudes_dB (np.array): Magnitude of the FFT at each frequency in decibels.
-    """
-    n = len(time_series)
-    fft_result = np.fft.fft(time_series)
-    frequencies = np.fft.fftfreq(n, d=1/sampling_rate)
-    magnitudes = np.abs(fft_result)
-    
-    # Convert magnitudes to dB
-    # magnitudes_dB = 20 * np.log10(magnitudes)
-    
-    # Exclude zero frequency (first element) for both frequencies and magnitudes
-    return frequencies[1:n//2], magnitudes[1:n//2]  # Return only the positive half of the spectrum, excluding zero
 
 if __name__ == "__main__":
     sim_env = Univers(name='Part 3 Script 1',step=0.001)
@@ -62,9 +38,29 @@ if __name__ == "__main__":
     axis = Vecteur3D(0,1,0)
 
     while True:
+        print("\n\n\n\n\n\n\nChoisissez le type de systeme:    ")
+        print(" 1. Systeme sous-amorti ")
+        print(" 2. Systeme sur-amorti ")
+        print(" 3. Systeme criticalement amorti ")
+
+        choice = input("Choice ? : \n ")
+
+        if choice == "1":
+            break
+        elif choice == "2":
+            break
+        elif choice == "3":
+            break
+        else:
+            print("\n\n Choix incorrect.")
+            print("Choix incorrect.")
+
+    choice1 = choice
+
+    while True:
         print("\n\n\n\n\n\n\nChoisissez la force a appliquer:    ")
         print(" 1. Force constante ")
-        print(" 2. Force harmonique ")
+        print(" 2. Force harmonique (Cosinus de période 4s)")
         
         choice = input("Choice ? : \n ")
 
@@ -82,7 +78,10 @@ if __name__ == "__main__":
     print("        Partie 3: Script 1          ")
     print("    masse + (ressort+amortisseur)   ")
     print("                                    ")
-    print("       Press F to apply force       ")
+    if choice == "1":
+        print("       Hold F to apply force       ")
+    else:
+        print("      Press F to start force       ")
     print("")
     print("------------------------------------")
     print("\n\n\n")
@@ -91,9 +90,17 @@ if __name__ == "__main__":
     sim_env.force_active = False
 
     k=10
-    c=(0.1,1)[choice =="2"]
-    f_link = Prismatic(P_fixe,P_mass, axis, k=k, c=c)
+    match choice1:
+        case "1":
+            c = c=(0.1,1)[choice =="2"]
+        case "2":
+            c = 12
+        case "3":
+            c = math.sqrt(4 * k * P_mass.mass)
 
+    # c=(0.1,1)[choice =="2"] #C = sqrt(4mk)
+    # c=(100,1)[choice =="2"] #C = sqrt(4mk)
+    f_link = Prismatic(P_fixe,P_mass, axis, k=k, c=c)
 
     sim_env.addGenerators(f_link)
 
@@ -122,7 +129,22 @@ if __name__ == "__main__":
     
 
     figure("Spring Mass Damper ")
-    title(f"Mass-Spring-Damper f_theo: {f:.3f}hz, f_mesu: {1/average_period:.3f}Hz")
+    if choice == "1":
+        match choice1:
+            case "1":
+                title(f"Mass-Spring-Damper f_theo: {f:.3f}hz, f_mesu: {1/average_period:.3f}Hz")
+            case "2":
+                title(f"Overdamped Mass-Spring-Damper, c={c:.3f}")
+            case "3":
+                title(f"Critically damped MSD")
+    else:
+        match choice1:
+            case "1":
+                title(f"Mass-Spring-Damper f_theo: {f:.3f}hz, f_mesu: {1/average_period:.3f}Hz")
+            case "2":
+                title(f"Overdamped Mass-Spring-Damper, c={c:.3f},  f_theo: {f:.3f}hz, f_mesu: {1/average_period:.3f}Hz")
+            case "3":
+                title(f"Critically damped MSD,  f_theo: {f:.3f}hz, f_mesu: {1/average_period:.3f}Hz")
     plot(sim_env.time,sim_env.pos,label="P_mass position")
     xlabel("Time (s)")
     ylabel("Position (m)")

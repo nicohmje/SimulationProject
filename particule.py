@@ -148,13 +148,17 @@ class Univers(object):
             self.simulate()
      
     def plot(self):
-        from pylab import figure,legend,show
+        from pylab import figure,legend,show, xlabel, ylabel
         
         figure(self.name)
         
         for agent in self.population :
+            if agent.color == "white":
+                continue
             agent.plot()
-            
+        
+        xlabel("Position (mm)")
+        ylabel("Position (mm)")
         legend()
         show()
         
@@ -380,136 +384,6 @@ class Prismatic(SpringDamper):
             particule.applyForce(-force)
         else:
             pass
-
-
-class MoteurCC:
-    def __init__(self, p1:Particule, p2:Particule, res = 1, inductance = 0.001, kc = 0.01, ke = 0.01, rotorJ = 0.01, resistive_torque=0, externJ=0, max_voltage=0, f=0.1):
-
-        ## MOTOR PARAMS
-        self.resistance_Ohm = res
-        self.inductance_H = inductance
-        self.backemf = 0
-
-        self.max_voltage_V = max_voltage
-
-        self.torque_constant_Nm_A = kc
-        self.backemf_constant_Vs = ke
-
-        self.rotor_inertia_kgm2 = rotorJ
-        self.total_inertia_kgm2 = rotorJ + externJ
-
-        self.viscous_friction_Nms = f
-
-        self.resistive_torque_Nm = resistive_torque
-
-        self.voltage_V = [0]
-        self.current_A = [0] 
-        self.torque_Nm = [0]
-
-    def __str__(self):
-        return "Moteur CC (Speed : "+str(self.speed_rad_s[-1])+', Torque : '+str(self.torque_Nm[-1])+', Voltage '+self.voltage_V[-1]+', Current '+str(self.current_A[-1])+')'
-
-    def __repr__(self):
-        return str(self)
-    
-    def setExternTorque(self, extern_torque):
-        self.resistive_torque_Nm = extern_torque
-        print("ext torque: ", extern_torque)
-    
-    def setInertia(self, load_inertia):
-        
-        """
-            set inertia (J)
-        """
-        self.total_inertia_kgm2 = self.rotor_inertia_kgm2 + load_inertia
-
-        denom = 1 / (self.torque_constant_Nm_A * self.backemf_constant_Vs + self.resistance_Ohm * self.viscous_friction_Nms)
-        self.tau = (self.resistance_Ohm * self.total_inertia_kgm2) * denom
-        self.K = self.torque_constant_Nm_A * denom
-
-    def setViscosity(self, visco):
-        self.viscous_friction_Nms = visco
-
-    
-    def setVoltage(self, voltage):
-        if self.max_voltage_V:
-            voltage = min(self.max_voltage_V, voltage)
-        self.voltage_V.append(voltage)
-
-    def getCurrent(self):
-        return self.current_A[-1]
-    
-    def getSpeed(self):
-        return self.speed_rad_s[-1]
-
-    def getTorque(self):
-        return self.torque_Nm[-1]
-    
-    def getPosition(self):
-        return self.position_rad[-1]
-    
-    def getAllStates(self):
-        return self.position_rad, self.speed_rad_s, self.torque_Nm, self.current_A
-    
-    
-    def d_dt(self,current,speed):
-        
-        """
-            Derivatives for current and speed (see formula given by S. Haliyo)
-        """
-
-        didt = (self.voltage_V[-1] - self.resistance_Ohm * current - self.backemf_constant_Vs * speed) / self.inductance_H
-        dodt = (self.torque_constant_Nm_A * current - self.viscous_friction_Nms * speed) / self.total_inertia_kgm2
-        
-        # print(current,speed,dodt,didt)
-        return [dodt, didt]
-
-    def rk4(self, current, speed):
-
-        """
-            Parallel RK4 to numerically integrate the DC motor equation.
-        """
-
-        #the o suffix is for omega, as in the speed
-        #the i suffix is for the current
-        derivatives = self.d_dt(current, speed)
-        k1_o = derivatives[0] * self.stepsize_s
-        k1_i = derivatives[1] * self.stepsize_s
-
-        derivatives = self.d_dt(current + 0.5*k1_i, speed + 0.5*k1_o)
-        k2_o = self.stepsize_s * derivatives[0]
-        k2_i = self.stepsize_s * derivatives[1]
-
-        derivatives = self.d_dt(current + 0.5*k2_i, speed + 0.5*k2_o)
-        k3_o = self.stepsize_s * derivatives[0]
-        k3_i = self.stepsize_s * derivatives[1]
-
-        derivatives = self.d_dt(current+ k3_i, speed+k3_o)
-        k4_o = self.stepsize_s * derivatives[0]
-        k4_i = self.stepsize_s * derivatives[1]
-
-        new_speed = speed + 1/6. * (k1_o + 2*k2_o + 2*k3_o + k4_o)
-        new_current = current + 1/6. * (k1_i + 2*k2_i + 2*k3_i + k4_i)
-        # time.sleep(3)
-        return new_current, new_speed
-    
-
-    def simule(self, step):
-
-        """
-            Simulate a step. Numerically integrate current and speed, then integrate speed to get position. 
-        """
-
-        self.stepsize_s = step
-        new_curr, new_speed = self.rk4(self.current_A[-1], self.speed_rad_s[-1])
-        # print(new_curr, new_speed)
-        # time.sleep(1)
-        
-        self.current_A.append(new_curr)
-        self.speed_rad_s.append(new_speed)
-        self.torque_Nm.append(self.torque_constant_Nm_A * new_curr - self.resistive_torque_Nm)
-        self.position_rad.append(self.position_rad[-1] + new_speed*self.stepsize_s)
-
     
 if __name__=='__main__':
     from pylab import figure, show, legend

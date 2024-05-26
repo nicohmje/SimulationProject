@@ -63,7 +63,7 @@ if __name__ == "__main__":
     pends = []
 
     for i in pendulums: 
-        pends.append(Particule(p0=Vecteur3D(500-i, 450, 0), name=f"pend_{i}", color="cyan", mass=1, draw=False))
+        pends.append(Particule(p0=Vecteur3D(500-i, 450, 0), name=f"pend_{i*0.1}", color="cyan", mass=1, draw=False))
 
 
     sim_env.addAgent(P_fixe,*pends)
@@ -72,6 +72,18 @@ if __name__ == "__main__":
 
 
     pends.append(P_fixe)
+
+    print("\n\n\n\n\n\n\n\n\n")
+    print("------------------------------------")
+    print("")
+    print("        Partie 3: Script 3          ")
+    print("      Double pendule, L= 15,10      ")
+    print("                                    ")
+    print("         Press F to start           ")
+    print("         Press G to reset           ")
+    print("")
+    print("------------------------------------")
+    print("\n\n\n")
 
     
 

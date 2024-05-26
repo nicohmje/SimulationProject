@@ -54,7 +54,7 @@ def HzToLength(f):
 
 
 if __name__ == "__main__":
-    sim_env = Univers(name='Part 3 Script 2',step=0.005)
+    sim_env = Univers(name='Part 3 Script 2',step=0.001)
 
     P_fixe = Particule(p0=Vecteur3D(500,450,0),fix=True,name="Base",color="white")
 
@@ -74,12 +74,16 @@ if __name__ == "__main__":
             print("Choix incorrect.")
             print("Choix incorrect.")
 
+    g = 9807
+
 
     if choice == "2":
 
         pendulums = [HzToLength(j)*1000 for j in [((i+50)/60.) for i in range(1,15,1)]]
 
-        f_down = Gravity(Vecteur3D(0,-9810,0),active=False)
+        sim_env.step = 0.005
+
+        f_down = Gravity(Vecteur3D(0,-g,0),active=False)
         f_damp = Damping(0.05, "air friction?", active=True)
 
         print("\n\n\n\n\n\n\n\n\n")
@@ -97,7 +101,7 @@ if __name__ == "__main__":
     else:
 
         pendulums = [100,200,300]
-        f_down = Gravity(Vecteur3D(0,-9810,0),active=False)
+        f_down = Gravity(Vecteur3D(0,-g,0),active=False)
         f_damp = Damping(0.1, "air friction?", active=True)
 
         print("\n\n\n\n\n\n\n\n\n")
@@ -162,8 +166,11 @@ if __name__ == "__main__":
 
             zero_crossings = np.where(np.diff(np.signbit(sim_env.pos1)))[0]
             average_period = 2*np.mean(np.diff(t[zero_crossings]))
+
+            t_theo = math.pi * 2 * (math.sqrt(pendulums[0]/g))
+
             figure("Pendule")
-            title(f"Pendule de {pendulums[0]*0.1} cm, periode: {average_period:.3f}s")
+            title(f"Pendule de {pendulums[0]*0.1} cm, T_mesure: {average_period:.3f}s, T_theorique: {t_theo:.3f}s")
             plot(t,sim_env.pos1)
             xlabel("Time (s)")
             ylabel("Position x (cm)")
@@ -172,10 +179,12 @@ if __name__ == "__main__":
             sim_env.pos2 = sim_env.pos2 - np.mean(sim_env.pos2)
             t = np.array(sim_env.time[sim_env.start:])
 
+            t_theo = math.pi * 2 * (math.sqrt(pendulums[1]/g))
+
             zero_crossings = np.where(np.diff(np.signbit(sim_env.pos2)))[0]
             average_period = 2*np.mean(np.diff(t[zero_crossings]))
             figure("Pendule")
-            title(f"Pendule de {pendulums[1]*0.1} cm, periode: {average_period:.3f}s")
+            title(f"Pendule de {pendulums[1]*0.1} cm, T_mesure: {average_period:.3f}s, T_theorique: {t_theo:.3f}s")
             plot(t,sim_env.pos2)
             xlabel("Time (s)")
             ylabel("Position x (cm)")
@@ -185,10 +194,13 @@ if __name__ == "__main__":
             sim_env.pos3 = sim_env.pos3 - np.mean(sim_env.pos3)
             t = np.array(sim_env.time[sim_env.start:])
 
+            t_theo = math.pi * 2 * (math.sqrt(pendulums[2]/g))
+
+
             zero_crossings = np.where(np.diff(np.signbit(sim_env.pos3)))[0]
             average_period = 2*np.mean(np.diff(t[zero_crossings]))
             figure("Pendule")
-            title(f"Pendule de {pendulums[2]*0.1} cm, periode: {average_period:.3f}s")
+            title(f"Pendule de {pendulums[2]*0.1} cm,T_mesure: {average_period:.3f}s, T_theorique: {t_theo:.3f}s")
             plot(t,sim_env.pos3)
             xlabel("Time (s)")
             ylabel("Position x (cm)")
@@ -196,6 +208,8 @@ if __name__ == "__main__":
         except:
             print("No oscillations have been observed. Did you start the simulation (F)? Perhaps you reset it (G)?")
             pass
+    else:
+        sim_env.plot()
     
     
     
